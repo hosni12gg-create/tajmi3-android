@@ -4,6 +4,9 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,7 +27,20 @@ jobs:
       - name: Build debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
 
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/*.apk tajmi3.apk
+
       - uses: actions/upload-artifact@v4
         with:
           name: tajmi3-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: tajmi3.apk
+
+      # رابط تحميل مباشر ثابت للـ APK (صفحة Releases)
+      - name: Publish APK to Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: tajmi3 (latest APK)
+          body: "آخر نسخة APK. نزّل tajmi3.apk وثبّته."
+          files: tajmi3.apk
+          make_latest: true
