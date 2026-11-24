@@ -15,8 +15,25 @@ android {
         versionName = "1.0"
     }
 
+    // Fixed signing key (from GitHub secrets) so every build has the same SHA-1.
+    // Without the secrets it falls back to the normal debug key.
+    val ksFile = System.getenv("KEYSTORE_FILE")
+    if (ksFile != null && file(ksFile).exists()) {
+        signingConfigs {
+            create("tajmi3") {
+                storeFile = file(ksFile)
+                storePassword = System.getenv("KEYSTORE_PASS")
+                keyAlias = "tajmi3"
+                keyPassword = System.getenv("KEYSTORE_PASS")
+            }
+        }
+    }
+
     buildTypes {
         release { isMinifyEnabled = false }
+        debug {
+            signingConfigs.findByName("tajmi3")?.let { signingConfig = it }
+        }
     }
 
     compileOptions {

@@ -26,6 +26,18 @@ jobs:
         with:
           gradle-version: 8.11.1
 
+      - name: Restore signing key (if secrets are set)
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/tajmi3.jks"
+            echo "KEYSTORE_FILE=$RUNNER_TEMP/tajmi3.jks" >> "$GITHUB_ENV"
+            echo "KEYSTORE_PASS=${{ secrets.KEYSTORE_PASS }}" >> "$GITHUB_ENV"
+          else
+            echo "No signing secrets, using default debug key"
+          fi
+
       - name: Build debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
 
