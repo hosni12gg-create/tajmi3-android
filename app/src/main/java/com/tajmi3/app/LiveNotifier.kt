@@ -23,7 +23,7 @@ import kotlin.math.roundToInt
  */
 object LiveNotifier {
 
-    private const val CHANNEL = "tajmi3_live"
+    private const val CHANNEL = "tajmi3_live2"
     private const val NOTIF_ID = 1
     private val ACCENT = Color.parseColor("#F5A300")
 
@@ -67,6 +67,7 @@ object LiveNotifier {
         val channel = NotificationChannel(CHANNEL, "تقدّم التجميع", NotificationManager.IMPORTANCE_DEFAULT).apply {
             description = "يعرض المبلغ المتبقي وشريط التقدم"
             setShowBadge(false)
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             setSound(null, null)
             enableVibration(false)
         }
@@ -91,6 +92,7 @@ object LiveNotifier {
             .setContentText(text)
             .setContentIntent(tap)
             .setOngoing(true)
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setOnlyAlertOnce(true)
             .setCategory(Notification.CATEGORY_PROGRESS)
 
