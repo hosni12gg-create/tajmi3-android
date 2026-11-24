@@ -100,11 +100,53 @@ object LiveNotifier {
                 .setProgress(pct)
             b.setStyle(style)
             b.setShortCriticalText(shortText(remaining))
-            b.addExtras(android.os.Bundle().apply { putBoolean("android.requestPromotedOngoing", true) })
+            requestPromoted(b)
         } else {
             b.setProgress(100, pct, false)
         }
 
         nm.notify(NOTIF_ID, b.build())
+        if (Build.VERSION.SDK_INT >= 36) checkPromotion(ctx, nm)
+    }
+
+    /** setRequestPromotedOngoing is API 36.1, so call it by reflection and fall back to the extra. */
+    private fun requestPromoted(b: Notification.Builder) {
+        try {
+            Notification.Builder::class.java
+                .getMethod("setRequestPromotedOngoing", java.lang.Boolean.TYPE)
+                .invoke(b, true)
+        } catch (_: Throwable) {
+            b.addExtras(android.os.Bundle().apply { putBoolean("android.requestPromotedOngoing", true) })
+        }
+    }
+
+    /**
+     * If the user turned off "Live notifications" for this app, the Now Bar will never show it.
+     * Tell them once and open the right settings page.
+     */
+    private fun checkPromotion(ctx: Context, nm: NotificationManager) {
+        val allowed = try {
+            NotificationManager::class.java.getMethod("canPostPromotedNotifications").invoke(nm) as Boolean
+        } catch (_: Throwable) { true }
+        if (allowed) return
+
+        val prefs = ctx.getSharedPreferences("tajmi3_live", Context.MODE_PRIVATE)
+        if (prefs.getBoolean("asked", false)) return
+        prefs.edit().putBoolean("asked", true).apply()
+
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            android.widget.Toast.makeText(ctx, "فعّل «الإشعارات الحية» لتجميع عشان يظهر بالـ Now Bar", android.widget.Toast.LENGTH_LONG).show()
+        }
+        val pkg = ctx.packageName
+        val intents = listOf(
+            Intent("android.settings.APP_NOTIFICATION_PROMOTION_SETTINGS"),
+            Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+        )
+        for (i in intents) {
+            try {
+                ctx.startActivity(i.putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, pkg).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                break
+            } catch (_: Throwable) { }
+        }
     }
 }
