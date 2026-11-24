@@ -280,6 +280,66 @@ function flush(){const g=S.pages.find(x=>x.id===S.pid);if(g){g.p=S.p;g.tx=S.tx;g
 const dump=()=>{flush();return JSON.stringify({app:S.app,theme:S.theme,cur:S.cur,quick:S.quick,anim:S.anim,haptic:S.haptic,notif:S.notif,pages:S.pages,pid:S.pid})};
 useP(S.pid);
 
+/* ---------- account + sync ---------- */
+const WEB_CID='194654000626-2efd9v4gtctt20k1pco63si2iuldnd7v.apps.googleusercontent.com';
+const DEFAULT_SRV='';
+const AK='tajmi3_acct';
+let AC={token:'',user:null,srv:'',last:0};
+try{Object.assign(AC,JSON.parse(localStorage.getItem(AK))||{})}catch(e){}
+if(!AC.srv)AC.srv=DEFAULT_SRV;
+const saveAC=()=>{try{localStorage.setItem(AK,JSON.stringify(AC))}catch(e){}};
+let syncBusy=false,acT=null,syncMsg='';
+const srvUrl=()=>String(AC.srv||'').trim().replace(/\/+$/,'');
+const localTs=()=>{try{return +localStorage.getItem(KEY+'_t')||0}catch(e){return 0}};
+async function api(path,opt){
+ const ac=new AbortController(),to=setTimeout(()=>ac.abort(),20000);
+ try{
+  const r=await fetch(srvUrl()+path,Object.assign({signal:ac.signal,headers:{'Authorization':'Bearer '+AC.token,'Content-Type':'application/json'}},opt||{}));
+  let j={};try{j=await r.json()}catch(e){}
+  if(r.status===401){AC.token='';AC.user=null;saveAC();toast('انتهت الجلسة، سجّل دخول من جديد');if(tab==='acct')render()}
+  return{ok:r.ok,status:r.status,j};
+ }finally{clearTimeout(to)}
+}
+function applyRemote(data,ts){
+ const r=JSON.parse(data);Object.assign(S,norm(r));useP(S.pid);
+ try{localStorage.setItem(KEY,data);localStorage.setItem(KEY+'_t',String(ts))}catch(e){}
+ idbPut({ts,d:data}).catch(()=>{});
+ resetPrev();theme();render();push();
+}
+async function acSync(manual){
+ if(!AC.token||!srvUrl()||syncBusy)return;
+ syncBusy=true;
+ try{
+  const g=await api('/sync');
+  if(!g.ok){syncMsg='ما قدرت أوصل للسيرفر';if(manual)toast(syncMsg);return}
+  const lt=localTs(),has=S.pages.length>0,sv=g.j.data,st=g.j.ts||0;
+  if(sv&&!AC.last&&has&&lt){
+   // first sync on this device and both sides have data: ask once
+   if(confirm('في بيانات على السيرفر وبهالجهاز كمان.\nموافق = استعمل نسخة السيرفر\nإلغاء = ارفع بيانات هالجهاز مكانها'))applyRemote(sv,st);
+   else{const p=await api('/sync',{method:'PUT',body:JSON.stringify({data:dump(),ts:Date.now()})});if(p.ok){try{localStorage.setItem(KEY+'_t',String(p.j.ts))}catch(e){}}}
+  }else if(sv&&st>lt){applyRemote(sv,st);if(manual)toast('تم تحديث البيانات من السيرفر')}
+  else if(has&&(!sv||lt>st)){
+   const p=await api('/sync',{method:'PUT',body:JSON.stringify({data:dump(),ts:lt||Date.now()})});
+   if(p.status===409&&p.j.ts>lt){const g2=await api('/sync');if(g2.ok&&g2.j.data)applyRemote(g2.j.data,g2.j.ts)}
+   else if(!p.ok){syncMsg='فشل رفع البيانات';return}
+  }
+  AC.last=Date.now();saveAC();
+  const d=new Date();syncMsg='آخر مزامنة '+p2(d.getHours())+':'+p2(d.getMinutes());
+  if(manual)toast('تمت المزامنة');
+ }catch(e){syncMsg='السيرفر مش متاح هلأ';if(manual)toast(syncMsg)}
+ finally{syncBusy=false;if(tab==='acct'&&!cust)render()}
+}
+function schedSync(){if(!AC.token)return;clearTimeout(acT);acT=setTimeout(()=>acSync(false),2500)}
+window.onGoogleToken=async t=>{
+ try{
+  const r=await fetch(srvUrl()+'/auth/google',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id_token:t})});
+  let j={};try{j=await r.json()}catch(e){}
+  if(!r.ok){toast(r.status===403?'هالإيميل مش مسموح له':'السيرفر رفض تسجيل الدخول');return}
+  AC.token=j.token;AC.user=j.user;AC.last=0;saveAC();toast('أهلاً '+j.user.name);render();acSync(true);
+ }catch(e){toast('ما قدرت أوصل للسيرفر، تأكد من العنوان')}
+};
+window.onGoogleError=m=>toast(m==='cancel'?'انلغى تسجيل الدخول':'ما تم تسجيل الدخول');
+
 let tab='home',cust=false,mode=1,amt='',note='',adate='',aimgs=[],dr=null,td=null,tT,lastNew=null,fxPending=null,bgKey='';
 let prev={pc:0,rem:0,s:0},cur={pc:0,rem:0,s:0};
 const TABS=['home','prod','hist','set','acct'];
@@ -304,7 +364,7 @@ const idbPut=v=>getdb().then(db=>new Promise((res,rej)=>{const t=db.transaction(
 const idbGet=()=>getdb().then(db=>new Promise((res,rej)=>{const q=db.transaction('kv').objectStore('kv').get('state');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}));
 function save(){const d=dump(),ts=Date.now();let ok=false;
  try{localStorage.setItem(KEY,d);localStorage.setItem(KEY+'_t',String(ts));ok=true}catch(e){try{localStorage.removeItem(KEY);localStorage.removeItem(KEY+'_t')}catch(x){}}
- idbPut({ts,d}).catch(()=>{if(!ok)toast('ما قدرت أحفظ، المساحة ممتلية')});push()}
+ idbPut({ts,d}).catch(()=>{if(!ok)toast('ما قدرت أحفظ، المساحة ممتلية')});push();schedSync()}
 function push(){if(!S.pages.length)return;try{if(window.TajmiAndroid){if(S.notif===false){TajmiAndroid.notif(false);return}TajmiAndroid.notif(true);TajmiAndroid.update(saved(),+S.p.price||0,String(S.cur),String(S.p.name))}}catch(e){}}
 
 /* ---------- icons ---------- */
@@ -495,16 +555,25 @@ function sets(){
  <button class="btn d w" data-a="reset">${svg('trash')}تصفير رصيد وسجل هذه الصفحة</button>`;
 }
 function acct(){
- const A=!!window.TajmiAndroid;
+ const A=!!window.TajmiAndroid,u=AC.user;
  const tg=(k,t,s)=>`<div class="tg"><div><b>${t}</b><span class="mute">${s}</span></div><button class="sw2${S[k]!==false?' on':''}" data-a="tog" data-v="${k}" aria-label="${t}"></button></div>`;
+ const srv=`<label style="margin-top:0">عنوان السيرفر</label><input data-srv value="${esc(AC.srv)}" placeholder="https://اسم.ts.net" dir="ltr" autocapitalize="off" autocomplete="off">`;
+ const login=AC.token&&u?`<div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
+   ${u.picture?`<img src="${esc(u.picture)}" referrerpolicy="no-referrer" alt="" style="width:56px;height:56px;border-radius:50%;object-fit:cover;flex:none">`:''}
+   <div style="min-width:0"><b style="font-size:17px">${esc(u.name)}</b><span class="mute" dir="ltr" style="display:block;overflow:hidden;text-overflow:ellipsis">${esc(u.email)}</span></div></div>
+   <span class="mute" style="display:block;margin-bottom:12px">${esc(syncMsg||'مسجّل دخول')}</span>
+   <div class="row"><button class="btn" style="flex:1" data-a="syncnow">زامن هلأ</button><button class="btn g" style="flex:1" data-a="signout">تسجيل الخروج</button></div>
+   <div style="margin-top:16px">${srv}</div>`
+  :`<span class="mute">سجّل دخول بحساب جوجل عشان بياناتك تنحفظ على السيرفر وتتزامن بين أجهزتك.</span>
+   <div style="margin-top:14px">${srv}</div>
+   ${A?`<button class="btn w" style="margin-top:12px" data-a="signin">تسجيل الدخول بجوجل</button>`
+      :`<button class="btn g w" style="margin-top:12px;opacity:.5" disabled>متوفر بتطبيق الأندرويد حالياً</button>`}`;
  return `<div class="top"><div class="logo">الحساب</div></div>${pbar()}
+ <div class="card"><h2>${AC.token&&u?'حسابك':'تسجيل الدخول'}</h2>${login}</div>
  <div class="card"><h2>الإشعارات</h2>
   ${A?tg('notif','إشعار التقدّم','يعرض المتبقي والنسبة بشريط الإشعارات والـ Now Bar')
      :'<span class="mute">إشعار التقدّم متوفر بتطبيق الأندرويد بس.</span>'}
-  ${A?`<div class="row" style="margin-top:12px"><button class="btn g" style="flex:1" data-a="nset">إعدادات الإشعارات</button><button class="btn g" style="flex:1" data-a="nlive">الإشعارات الحية</button></div>`:''}</div>
- <div class="card"><h2>تسجيل الدخول والمزامنة</h2>
-  <span class="mute">ربط حسابك بجوجل ومزامنة البيانات بين أجهزتك، قريباً.</span>
-  <button class="btn g w" style="margin-top:12px;opacity:.5" disabled>تسجيل الدخول بجوجل</button></div>`;
+  ${A?`<div class="row" style="margin-top:12px"><button class="btn g" style="flex:1" data-a="nset">إعدادات الإشعارات</button><button class="btn g" style="flex:1" data-a="nlive">الإشعارات الحية</button></div>`:''}</div>`;
 }
 function welcome(){
  return `<div class="top"><div class="logo">${LOGO}${esc(S.app)}</div><button class="ib" data-a="tt" aria-label="الوضع">${svg(S.theme==='dark'?'sun':'moon')}</button></div>
@@ -732,6 +801,9 @@ const A={
  zoom:(d,e)=>{const l=$('lb');l.firstElementChild.src=e.target.src;l.classList.add('on')},
  theme:d=>{S.theme=d.v;save();theme();const g=$('tseg');if(g){g.style.setProperty('--m',d.v==='dark'?1:0);[].forEach.call(g.querySelectorAll('button'),b=>b.classList.toggle('on',b.dataset.v===d.v))}},
  acc:d=>{S.acc=d.v;refresh()},
+ signin:()=>{if(!srvUrl()){toast('اكتب عنوان السيرفر أول');return}try{TajmiAndroid.signIn(WEB_CID)}catch(e){toast('متوفر بالأندرويد بس')}},
+ signout:()=>{if(!confirm('تسجّل خروج؟ البيانات بتضل على جهازك وعلى السيرفر.'))return;AC.token='';AC.user=null;AC.last=0;saveAC();try{TajmiAndroid.signOut()}catch(e){}render()},
+ syncnow:()=>acSync(true),
  nset:()=>{try{TajmiAndroid.openNotifSettings()}catch(e){}},nlive:()=>{try{TajmiAndroid.openLiveSettings()}catch(e){}},
  tog:d=>{S[d.v]=S[d.v]===false;save();theme();render();hap(10)},
  bgn:()=>{S.bg={t:'none',v:'',dim:S.bg.dim};refresh()},
@@ -757,6 +829,9 @@ function tx(a,n){
 /* ---------- events ---------- */
 document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b&&A[b.dataset.a])A[b.dataset.a](b.dataset,e)});
 document.addEventListener('pointerdown',ripple);
+document.addEventListener('change',e=>{const t=e.target;if(t&&t.hasAttribute&&t.hasAttribute('data-srv')){AC.srv=t.value.trim();saveAC();toast('انحفظ العنوان')}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)acSync(false)});
+setTimeout(()=>acSync(false),1200);
 document.addEventListener('input',e=>{
  if(e.target.id==='amt')amt=e.target.value;
  else if(e.target.id==='note')note=e.target.value;

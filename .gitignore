@@ -2,3 +2,9 @@
 build/
 local.properties
 .idea/
+server/.venv/
+server/data/
+server/backups/
+server/.env
+server/__pycache__/
+server/.pytest_cache/

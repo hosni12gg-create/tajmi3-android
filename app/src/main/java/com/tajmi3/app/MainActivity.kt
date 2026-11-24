@@ -24,7 +24,19 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.EditText
 import android.widget.FrameLayout
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
+import androidx.credentials.CredentialManagerCallback
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.ClearCredentialException
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.webkit.WebViewAssetLoader
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import org.json.JSONObject
 
 class MainActivity : Activity() {
 
@@ -164,6 +176,35 @@ class MainActivity : Activity() {
         if (requestCode == REQ_NOTIF) LiveNotifier.showLast(applicationContext)
     }
 
+    private fun js(code: String) = runOnUiThread { web.evaluateJavascript(code, null) }
+
+    private fun googleSignIn(webClientId: String) {
+        val request = GetCredentialRequest.Builder()
+            .addCredentialOption(GetSignInWithGoogleOption.Builder(webClientId).build())
+            .build()
+        CredentialManager.create(this).getCredentialAsync(
+            this, request, null, mainExecutor,
+            object : CredentialManagerCallback<GetCredentialResponse, GetCredentialException> {
+                override fun onResult(result: GetCredentialResponse) {
+                    val c = result.credential
+                    if (c is CustomCredential &&
+                        c.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+                    ) {
+                        val token = GoogleIdTokenCredential.createFrom(c.data).idToken
+                        js("window.onGoogleToken(" + JSONObject.quote(token) + ")")
+                    } else {
+                        js("window.onGoogleError('unsupported')")
+                    }
+                }
+
+                override fun onError(e: GetCredentialException) {
+                    val why = if (e is GetCredentialCancellationException) "cancel" else (e.message ?: "error")
+                    js("window.onGoogleError(" + JSONObject.quote(why) + ")")
+                }
+            }
+        )
+    }
+
     private fun applyTheme(dark: Boolean) {
         val c = if (dark) bgDark else bgLight
         root.setBackgroundColor(c)
@@ -178,6 +219,24 @@ class MainActivity : Activity() {
         @JavascriptInterface
         fun update(saved: Double, target: Double, cur: String, name: String) {
             LiveNotifier.update(applicationContext, saved, target, cur, name)
+        }
+
+        @JavascriptInterface
+        fun signIn(webClientId: String) {
+            runOnUiThread { googleSignIn(webClientId) }
+        }
+
+        @JavascriptInterface
+        fun signOut() {
+            runOnUiThread {
+                CredentialManager.create(this@MainActivity).clearCredentialStateAsync(
+                    ClearCredentialStateRequest(), null, mainExecutor,
+                    object : CredentialManagerCallback<Void?, ClearCredentialException> {
+                        override fun onResult(result: Void?) {}
+                        override fun onError(e: ClearCredentialException) {}
+                    }
+                )
+            }
         }
 
         @JavascriptInterface
