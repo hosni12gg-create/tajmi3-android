@@ -226,8 +226,8 @@ input[type=color]{height:44px;padding:4px;width:90px}
 .ios-tip b{display:block;font-weight:900;margin-bottom:3px}.ios-tip p{margin:0;font-size:13px;color:var(--mute);line-height:1.7}
 .ios-tip button{flex:none;border:0;background:var(--soft);color:var(--ink);width:30px;height:30px;border-radius:10px;font-size:15px}
 /* ---------- nav ---------- */
-nav{position:fixed;bottom:calc(10px + env(safe-area-inset-bottom));inset-inline:0;max-width:456px;margin:0 auto;width:calc(100% - 28px);display:grid;grid-template-columns:repeat(4,1fr);background:rgba(var(--card-r),0.86);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid var(--line);border-radius:24px;padding:6px;z-index:10;box-shadow:0 18px 40px -14px #000a}
-nav .ind{position:absolute;top:6px;bottom:6px;right:6px;width:calc((100% - 12px)/4);border-radius:18px;background:var(--acc);transform:translateX(calc(var(--n,0)*-100%));transition:transform .5s var(--ease);box-shadow:0 8px 18px -8px var(--acc)}
+nav{position:fixed;bottom:calc(10px + env(safe-area-inset-bottom));inset-inline:0;max-width:456px;margin:0 auto;width:calc(100% - 28px);display:grid;grid-template-columns:repeat(5,1fr);background:rgba(var(--card-r),0.86);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid var(--line);border-radius:24px;padding:6px;z-index:10;box-shadow:0 18px 40px -14px #000a}
+nav .ind{position:absolute;top:6px;bottom:6px;right:6px;width:calc((100% - 12px)/5);border-radius:18px;background:var(--acc);transform:translateX(calc(var(--n,0)*-100%));transition:transform .5s var(--ease);box-shadow:0 8px 18px -8px var(--acc)}
 nav button{position:relative;z-index:1;border:0;background:none;color:var(--mute);font-size:11px;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;border-radius:18px;transition:color .3s}
 nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .45s var(--ease)}
 nav button.on{color:var(--ai)}
@@ -267,9 +267,9 @@ const ACC={amber:['#f5a300','#1a1200'],green:['#22c55e','#04210f'],blue:['#3b82f
 const GR=['linear-gradient(160deg,#1b2a49,#0b1020)','linear-gradient(160deg,#3a1c71,#d76d77)','linear-gradient(160deg,#0f2027,#2c5364)','linear-gradient(160deg,#f5af19,#f12711)','linear-gradient(160deg,#a8edea,#fed6e3)','linear-gradient(160deg,#134e5e,#71b280)'];
 const NP=()=>({name:'منتج جديد',price:0,store:'',notes:'',url:'',avatar:'',links:[],imgs:[]});
 const NB=()=>({t:'none',v:'',dim:.6});
-let S={app:'tajmi3',theme:'dark',acc:'amber',accHex:'#f5a300',cur:'₪',quick:[200,100,50,10,5,1],anim:true,haptic:true,pages:[],pid:0};
+let S={app:'tajmi3',theme:'dark',acc:'amber',accHex:'#f5a300',cur:'₪',quick:[200,100,50,10,5,1],anim:true,haptic:true,notif:true,pages:[],pid:0};
 function norm(r){
- const o={};['app','theme','cur','quick','anim','haptic'].forEach(k=>{if(r[k]!==undefined)o[k]=r[k]});
+ const o={};['app','theme','cur','quick','anim','haptic','notif'].forEach(k=>{if(r[k]!==undefined)o[k]=r[k]});
  let pages=Array.isArray(r.pages)?r.pages:[];
  if(!pages.length&&(r.p||r.tx))pages=[{id:1,p:r.p,tx:r.tx,target:r.target,acc:r.acc,bg:r.bg}];
  o.pages=pages.map((g,i)=>({id:+g.id||Date.now()+i,p:Object.assign(NP(),g.p||{}),tx:Array.isArray(g.tx)?g.tx:[],target:g.target||'',acc:g.acc||'amber',accHex:g.accHex||'#f5a300',theme:g.theme||r.theme||'dark',bg:Object.assign(NB(),g.bg||{})}));
@@ -277,13 +277,13 @@ function norm(r){
 try{const r=JSON.parse(localStorage.getItem(KEY));if(r)Object.assign(S,norm(r))}catch(e){}
 function useP(id){const g=S.pages.find(x=>x.id===id)||S.pages[0];if(!g){S.pid=0;S.p=NP();S.tx=[];S.target='';S.bg=NB();return}S.pid=g.id;S.p=g.p;S.tx=g.tx;S.target=g.target;S.acc=g.acc;S.accHex=g.accHex;S.theme=g.theme;S.bg=g.bg}
 function flush(){const g=S.pages.find(x=>x.id===S.pid);if(g){g.p=S.p;g.tx=S.tx;g.target=S.target;g.acc=S.acc;g.accHex=S.accHex;g.theme=S.theme;g.bg=S.bg}}
-const dump=()=>{flush();return JSON.stringify({app:S.app,theme:S.theme,cur:S.cur,quick:S.quick,anim:S.anim,haptic:S.haptic,pages:S.pages,pid:S.pid})};
+const dump=()=>{flush();return JSON.stringify({app:S.app,theme:S.theme,cur:S.cur,quick:S.quick,anim:S.anim,haptic:S.haptic,notif:S.notif,pages:S.pages,pid:S.pid})};
 useP(S.pid);
 
 let tab='home',cust=false,mode=1,amt='',note='',adate='',aimgs=[],dr=null,td=null,tT,lastNew=null,fxPending=null,bgKey='';
 let prev={pc:0,rem:0,s:0},cur={pc:0,rem:0,s:0};
-const TABS=['home','prod','hist','set'];
-const TL={home:'الرئيسية',prod:'المنتج',hist:'السجل',set:'الإعدادات'};
+const TABS=['home','prod','hist','set','acct'];
+const TL={home:'الرئيسية',prod:'المنتج',hist:'السجل',set:'الإعدادات',acct:'الحساب'};
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fx=()=>S.anim!==false&&!RM;
 
@@ -305,13 +305,14 @@ const idbGet=()=>getdb().then(db=>new Promise((res,rej)=>{const q=db.transaction
 function save(){const d=dump(),ts=Date.now();let ok=false;
  try{localStorage.setItem(KEY,d);localStorage.setItem(KEY+'_t',String(ts));ok=true}catch(e){try{localStorage.removeItem(KEY);localStorage.removeItem(KEY+'_t')}catch(x){}}
  idbPut({ts,d}).catch(()=>{if(!ok)toast('ما قدرت أحفظ، المساحة ممتلية')});push()}
-function push(){if(!S.pages.length)return;try{if(window.TajmiAndroid)TajmiAndroid.update(saved(),+S.p.price||0,String(S.cur),String(S.p.name))}catch(e){}}
+function push(){if(!S.pages.length)return;try{if(window.TajmiAndroid){if(S.notif===false){TajmiAndroid.notif(false);return}TajmiAndroid.notif(true);TajmiAndroid.update(saved(),+S.p.price||0,String(S.cur),String(S.p.name))}}catch(e){}}
 
 /* ---------- icons ---------- */
 const IC={
  home:'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
  prod:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/>',
  hist:'<path d="M4 3v18l2-1 2 1 2-1 2 1 2-1 2 1 2-1V3zM9 8h6M9 12h6"/>',
+ acct:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
  set:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
  fire:'<path d="M12 3c1 3.5 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 2.8 2 2.5-.5-3 0-5.500 1-8z"/>',
  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -493,6 +494,18 @@ function sets(){
  <div class="card"><h2>نسخة احتياطية</h2><div class="row"><button class="btn g" style="flex:1" data-a="exp">${svg('copy')}نسخ البيانات</button><button class="btn g" style="flex:1" data-a="imp">${svg('doc')}استرجاع</button></div></div>
  <button class="btn d w" data-a="reset">${svg('trash')}تصفير رصيد وسجل هذه الصفحة</button>`;
 }
+function acct(){
+ const A=!!window.TajmiAndroid;
+ const tg=(k,t,s)=>`<div class="tg"><div><b>${t}</b><span class="mute">${s}</span></div><button class="sw2${S[k]!==false?' on':''}" data-a="tog" data-v="${k}" aria-label="${t}"></button></div>`;
+ return `<div class="top"><div class="logo">الحساب</div></div>${pbar()}
+ <div class="card"><h2>الإشعارات</h2>
+  ${A?tg('notif','إشعار التقدّم','يعرض المتبقي والنسبة بشريط الإشعارات والـ Now Bar')
+     :'<span class="mute">إشعار التقدّم متوفر بتطبيق الأندرويد بس.</span>'}
+  ${A?`<div class="row" style="margin-top:12px"><button class="btn g" style="flex:1" data-a="nset">إعدادات الإشعارات</button><button class="btn g" style="flex:1" data-a="nlive">الإشعارات الحية</button></div>`:''}</div>
+ <div class="card"><h2>تسجيل الدخول والمزامنة</h2>
+  <span class="mute">ربط حسابك بجوجل ومزامنة البيانات بين أجهزتك، قريباً.</span>
+  <button class="btn g w" style="margin-top:12px;opacity:.5" disabled>تسجيل الدخول بجوجل</button></div>`;
+}
 function welcome(){
  return `<div class="top"><div class="logo">${LOGO}${esc(S.app)}</div><button class="ib" data-a="tt" aria-label="الوضع">${svg(S.theme==='dark'?'sun':'moon')}</button></div>
  <div class="card hero wel"><div class="wring"><svg viewBox="0 0 140 140"><defs><linearGradient id="wg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--acc)"/><stop offset="1" style="stop-color:var(--acc-l)"/></linearGradient></defs><circle cx="70" cy="70" r="58" fill="none" stroke="var(--line)" stroke-width="10"/><circle cx="70" cy="70" r="58" fill="none" stroke="url(#wg)" stroke-width="10" stroke-linecap="round" stroke-dasharray="190 400" style="filter:drop-shadow(0 0 8px var(--acc))"/></svg><div class="wc">${svg('prod')}</div></div>
@@ -503,7 +516,7 @@ function welcome(){
   <div class="ins"><div class="ic">${svg('brush')}</div><div><b>صفحة لكل منتج</b><span class="mute">لون وخلفية وصورة بروفايل مستقلين لكل وحدة</span></div></div>
   <div class="ins"><div class="ic">${svg('check')}</div><div><b>بياناتك عندك</b><span class="mute">بتنحفظ على جهازك، ومعك نسخة احتياطية</span></div></div></div>
  <button class="btn g w" data-a="imp">${svg('doc')}عندي نسخة احتياطية، استرجعها</button>`}
-const VIEWS={home,prod,hist,set:sets};
+const VIEWS={home,prod,hist,set:sets,acct};
 
 /* ---------- render pipeline ---------- */
 function render(enter){
@@ -719,6 +732,7 @@ const A={
  zoom:(d,e)=>{const l=$('lb');l.firstElementChild.src=e.target.src;l.classList.add('on')},
  theme:d=>{S.theme=d.v;save();theme();const g=$('tseg');if(g){g.style.setProperty('--m',d.v==='dark'?1:0);[].forEach.call(g.querySelectorAll('button'),b=>b.classList.toggle('on',b.dataset.v===d.v))}},
  acc:d=>{S.acc=d.v;refresh()},
+ nset:()=>{try{TajmiAndroid.openNotifSettings()}catch(e){}},nlive:()=>{try{TajmiAndroid.openLiveSettings()}catch(e){}},
  tog:d=>{S[d.v]=S[d.v]===false;save();theme();render();hap(10)},
  bgn:()=>{S.bg={t:'none',v:'',dim:S.bg.dim};refresh()},
  bgg:d=>{S.bg={t:'grad',v:GR[+d.v],dim:S.bg.dim};refresh()},

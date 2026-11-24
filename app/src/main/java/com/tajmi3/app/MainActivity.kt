@@ -181,6 +181,35 @@ class MainActivity : Activity() {
         }
 
         @JavascriptInterface
+        fun notif(on: Boolean) {
+            LiveNotifier.setEnabled(applicationContext, on)
+        }
+
+        @JavascriptInterface
+        fun openNotifSettings() {
+            runOnUiThread {
+                startActivity(
+                    Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                        .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, packageName)
+                )
+            }
+        }
+
+        @JavascriptInterface
+        fun openLiveSettings() {
+            runOnUiThread {
+                try {
+                    startActivity(
+                        Intent("android.settings.APP_NOTIFICATION_PROMOTION_SETTINGS")
+                            .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, packageName)
+                    )
+                } catch (e: Exception) {
+                    openNotifSettings()
+                }
+            }
+        }
+
+        @JavascriptInterface
         fun theme(dark: Boolean) {
             runOnUiThread { applyTheme(dark) }
         }

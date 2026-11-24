@@ -25,13 +25,22 @@ object LiveNotifier {
 
     private const val CHANNEL = "tajmi3_live2"
     private const val NOTIF_ID = 1
-    private val ACCENT = Color.parseColor("#F5A300")
+    private val ACCENT = Color.parseColor("#FFC247")
+    private val CHIP_BG = Color.parseColor("#B86E00")
 
     private var saved = 0.0
     private var target = 0.0
     private var cur = "₪"
     private var name = "tajmi3"
     private var hasData = false
+    private var enabled = true
+
+    fun setEnabled(ctx: Context, on: Boolean) {
+        if (enabled == on) return
+        enabled = on
+        if (on) { if (hasData) post(ctx) }
+        else ctx.getSystemService(NotificationManager::class.java).cancel(NOTIF_ID)
+    }
 
     private fun df(pattern: String) =
         DecimalFormat(pattern, DecimalFormatSymbols(Locale.US))
@@ -59,6 +68,7 @@ object LiveNotifier {
     }
 
     private fun post(ctx: Context) {
+        if (!enabled) return
         if (Build.VERSION.SDK_INT >= 33 &&
             ctx.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) return
@@ -83,8 +93,8 @@ object LiveNotifier {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val title = if (done) "وصلت للهدف، مبروك! 🎉" else "المتبقي: ${fmt(remaining)} $cur"
-        val text = "$name · جمعت ${fmt(saved)} من ${fmt(target)} $cur ($pct%)"
+        val title = if (done) "وصلت للهدف، مبروك! 🎉" else "$pct% · المتبقي ${fmt(remaining)} $cur"
+        val text = "$name · جمعت ${fmt(saved)} من ${fmt(target)} $cur"
 
         val b = Notification.Builder(ctx, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat)
@@ -101,7 +111,7 @@ object LiveNotifier {
                 .setProgressSegments(listOf(Notification.ProgressStyle.Segment(100).setColor(ACCENT)))
                 .setProgress(pct)
             b.setStyle(style)
-            b.setShortCriticalText(shortText(remaining))
+            b.setShortCriticalText("$pct%")
             requestPromoted(b)
         } else {
             b.setProgress(100, pct, false)
@@ -126,8 +136,8 @@ object LiveNotifier {
             putString("android.ongoingActivityNoti.secondaryInfo", text)
             putString("android.ongoingActivityNoti.nowbarPrimaryInfo", title)
             putString("android.ongoingActivityNoti.nowbarSecondaryInfo", text)
-            putString("android.ongoingActivityNoti.chipExpandedText", shortText(remaining))
-            putInt("android.ongoingActivityNoti.chipBgColor", ACCENT)
+            putString("android.ongoingActivityNoti.chipExpandedText", "$pct%")
+            putInt("android.ongoingActivityNoti.chipBgColor", CHIP_BG)
             putParcelable(
                 "android.ongoingActivityNoti.chipIcon",
                 android.graphics.drawable.Icon.createWithResource(ctx, R.drawable.ic_stat)
