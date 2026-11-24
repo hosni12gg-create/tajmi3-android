@@ -100,7 +100,7 @@ object LiveNotifier {
                 .setProgress(pct)
             b.setStyle(style)
             b.setShortCriticalText(shortText(remaining))
-            b.setRequestPromotedOngoing(true)
+            b.addExtras(android.os.Bundle().apply { putBoolean("android.requestPromotedOngoing", true) })
         } else {
             b.setProgress(100, pct, false)
         }
