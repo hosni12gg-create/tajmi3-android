@@ -107,8 +107,35 @@ object LiveNotifier {
             b.setProgress(100, pct, false)
         }
 
+        samsungNowBar(ctx, b, title, text, pct, remaining)
+
         nm.notify(NOTIF_ID, b.build())
         if (Build.VERSION.SDK_INT >= 36) checkPromotion(ctx, nm)
+    }
+
+    /**
+     * Samsung's own Now Bar (One UI 7+) reads these extras. Other phones ignore them.
+     */
+    private fun samsungNowBar(
+        ctx: Context, b: Notification.Builder,
+        title: String, text: String, pct: Int, remaining: Double
+    ) {
+        val x = android.os.Bundle().apply {
+            putInt("android.ongoingActivityNoti.style", 1)
+            putString("android.ongoingActivityNoti.primaryInfo", title)
+            putString("android.ongoingActivityNoti.secondaryInfo", text)
+            putString("android.ongoingActivityNoti.nowbarPrimaryInfo", title)
+            putString("android.ongoingActivityNoti.nowbarSecondaryInfo", text)
+            putString("android.ongoingActivityNoti.chipExpandedText", shortText(remaining))
+            putInt("android.ongoingActivityNoti.chipBgColor", ACCENT)
+            putParcelable(
+                "android.ongoingActivityNoti.chipIcon",
+                android.graphics.drawable.Icon.createWithResource(ctx, R.drawable.ic_stat)
+            )
+            putInt("android.ongoingActivityNoti.progress", pct)
+            putInt("android.ongoingActivityNoti.progressMax", 100)
+        }
+        b.addExtras(x)
     }
 
     /** setRequestPromotedOngoing is API 36.1, so call it by reflection and fall back to the extra. */
