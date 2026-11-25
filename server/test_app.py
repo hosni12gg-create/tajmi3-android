@@ -44,3 +44,19 @@ def test_flow():
     A.ALLOWED.clear(); A.ALLOWED.add("someone@else.com")
     assert c.get("/me", headers=H).status_code == 403
     idt.verify_oauth2_token = idt_orig
+
+def test_open_signup_and_limits():
+    import google.oauth2.id_token as idt
+    A.ALLOWED.clear()
+    o = idt.verify_oauth2_token
+    idt.verify_oauth2_token = lambda t, r, audience=None: fake("new@gmail.com", sub="n1")(t)
+    r = c.post("/auth/google", json={"id_token": "x"}); assert r.status_code == 200
+    H = {"Authorization": "Bearer " + r.json()["token"]}
+    big = json.dumps({"x": "a" * (A.MAX_BYTES + 5000)})
+    assert c.put("/sync", headers=H, json={"data": big, "ts": 1}).status_code == 413
+    A.MAX_USERS = 1
+    idt.verify_oauth2_token = lambda t, r, audience=None: fake("other@gmail.com", sub="n2")(t)
+    assert c.post("/auth/google", json={"id_token": "x"}).status_code == 503
+    idt.verify_oauth2_token = lambda t, r, audience=None: fake("new@gmail.com", sub="n1")(t)
+    assert c.post("/auth/google", json={"id_token": "x"}).status_code == 200   # existing user still fine
+    idt.verify_oauth2_token = o

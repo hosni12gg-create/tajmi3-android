@@ -19,7 +19,8 @@ DB_PATH = os.environ.get("TAJMI3_DB", str(BASE / "data" / "tajmi3.db"))
 CLIENT_IDS = [c.strip() for c in os.environ.get("GOOGLE_CLIENT_ID", "").split(",") if c.strip()]
 ALLOWED = {e.strip().lower() for e in os.environ.get("ALLOWED_EMAILS", "").split(",") if e.strip()}
 SESSION_DAYS = int(os.environ.get("SESSION_DAYS", "60"))
-MAX_BYTES = int(os.environ.get("MAX_BYTES", str(40 * 1024 * 1024)))
+MAX_BYTES = int(os.environ.get("MAX_BYTES", str(15 * 1024 * 1024)))  # per user data
+MAX_USERS = int(os.environ.get("MAX_USERS", "1000"))
 SECRET_FILE = Path(os.environ.get("TAJMI3_SECRET_FILE", str(BASE / "data" / "session.key")))
 
 
@@ -146,6 +147,9 @@ async def auth_google(request: Request):
         raise HTTPException(403, "email not allowed")
     now = int(time.time())
     with closing(db()) as con:
+        known = con.execute("SELECT 1 FROM users WHERE sub=?", (info["sub"],)).fetchone()
+        if not known and con.execute("SELECT COUNT(*) FROM users").fetchone()[0] >= MAX_USERS:
+            raise HTTPException(503, "registration is full")
         con.execute(
             """INSERT INTO users(sub,email,name,picture,created,last_login) VALUES(?,?,?,?,?,?)
                ON CONFLICT(sub) DO UPDATE SET email=excluded.email,name=excluded.name,
@@ -178,8 +182,11 @@ def get_sync(authorization: str | None = Header(default=None)):
 @app.put("/sync")
 async def put_sync(request: Request, authorization: str | None = Header(default=None)):
     u = current_user(authorization)
+    cl = request.headers.get("content-length")
+    if cl and cl.isdigit() and int(cl) > MAX_BYTES + 1024:
+        raise HTTPException(413, "too large")
     raw = await request.body()
-    if len(raw) > MAX_BYTES:
+    if len(raw) > MAX_BYTES + 1024:
         raise HTTPException(413, "too large")
     try:
         body = json.loads(raw)
