@@ -222,6 +222,11 @@ class MainActivity : Activity() {
         }
 
         @JavascriptInterface
+        fun watch(saved: Double, target: Double, cur: String, name: String) {
+            WatchSync.send(applicationContext, saved, target, cur, name)
+        }
+
+        @JavascriptInterface
         fun signIn(webClientId: String) {
             runOnUiThread { googleSignIn(webClientId) }
         }

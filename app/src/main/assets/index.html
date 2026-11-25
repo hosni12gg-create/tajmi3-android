@@ -372,7 +372,7 @@ const idbGet=()=>getdb().then(db=>new Promise((res,rej)=>{const q=db.transaction
 function save(){const d=dump(),ts=Date.now();let ok=false;
  try{localStorage.setItem(KEY,d);localStorage.setItem(KEY+'_t',String(ts));ok=true}catch(e){try{localStorage.removeItem(KEY);localStorage.removeItem(KEY+'_t')}catch(x){}}
  idbPut({ts,d}).catch(()=>{if(!ok)toast('ما قدرت أحفظ، المساحة ممتلية')});push();schedSync()}
-function push(){if(!S.pages.length)return;try{if(window.TajmiAndroid){if(S.notif===false){TajmiAndroid.notif(false);return}TajmiAndroid.notif(true);TajmiAndroid.update(saved(),+S.p.price||0,String(S.cur),String(S.p.name))}}catch(e){}}
+function push(){if(!S.pages.length)return;try{if(window.TajmiAndroid){try{TajmiAndroid.watch(saved(),+S.p.price||0,String(S.cur),String(S.p.name))}catch(e){}if(S.notif===false){TajmiAndroid.notif(false);return}TajmiAndroid.notif(true);TajmiAndroid.update(saved(),+S.p.price||0,String(S.cur),String(S.p.name))}}catch(e){}}
 
 /* ---------- icons ---------- */
 const IC={

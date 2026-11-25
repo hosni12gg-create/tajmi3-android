@@ -43,13 +43,17 @@ jobs:
       - name: Build debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
 
-      - name: Rename APK
-        run: cp app/build/outputs/apk/debug/*.apk tajmi3.apk
+      - name: Rename APKs
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk tajmi3.apk
+          cp wear/build/outputs/apk/debug/wear-debug.apk tajmi3-watch.apk
 
       - uses: actions/upload-artifact@v4
         with:
           name: tajmi3-apk
-          path: tajmi3.apk
+          path: |
+            tajmi3.apk
+            tajmi3-watch.apk
 
       # رابط تحميل مباشر ثابت للـ APK (صفحة Releases)
       - name: Publish APK to Releases
@@ -58,5 +62,7 @@ jobs:
           tag_name: latest
           name: tajmi3 (latest APK)
           body: "آخر نسخة APK. نزّل tajmi3.apk وثبّته."
-          files: tajmi3.apk
+          files: |
+            tajmi3.apk
+            tajmi3-watch.apk
           make_latest: true

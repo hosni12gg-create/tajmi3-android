@@ -1,0 +1,49 @@
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+}
+
+android {
+    namespace = "com.tajmi3.wear"
+    compileSdk = 36
+
+    defaultConfig {
+        // Same id as the phone app, so the Data Layer connects them.
+        applicationId = "com.tajmi3.app"
+        minSdk = 30
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
+    }
+
+    val ksFile = System.getenv("KEYSTORE_FILE")
+    if (ksFile != null && file(ksFile).exists()) {
+        signingConfigs {
+            create("tajmi3") {
+                storeFile = file(ksFile)
+                storePassword = System.getenv("KEYSTORE_PASS")
+                keyAlias = "tajmi3"
+                keyPassword = System.getenv("KEYSTORE_PASS")
+            }
+        }
+    }
+
+    buildTypes {
+        release { isMinifyEnabled = false }
+        debug {
+            signingConfigs.findByName("tajmi3")?.let { signingConfig = it }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions { jvmTarget = "17" }
+
+    lint { abortOnError = false }
+}
+
+dependencies {
+    implementation("com.google.android.gms:play-services-wearable:18.2.0")
+}

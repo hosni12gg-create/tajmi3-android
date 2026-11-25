@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- ring track -->
+    <path
+        android:pathData="M54,28 A26,26 0 0 1 54,80 A26,26 0 0 1 54,28"
+        android:strokeColor="#F5A300"
+        android:strokeAlpha="0.28"
+        android:strokeWidth="5" />
+    <!-- progress arc (70%) -->
+    <path
+        android:pathData="M54,28 A26,26 0 1 1 29.27,62.03"
+        android:strokeColor="#F5A300"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+    <!-- laptop screen -->
+    <path
+        android:pathData="M44,44 h20 v12 h-20 z"
+        android:strokeColor="#F5A300"
+        android:strokeWidth="3"
+        android:strokeLineJoin="round" />
+    <!-- laptop base -->
+    <path
+        android:pathData="M40,60 h28"
+        android:strokeColor="#F5A300"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round" />
+</vector>

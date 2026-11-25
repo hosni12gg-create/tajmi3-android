@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "tajmi3"
-include(":app")
+include(":app", ":wear")
