@@ -289,7 +289,7 @@ try{Object.assign(AC,JSON.parse(localStorage.getItem(AK))||{})}catch(e){}
 if(!AC.srv)AC.srv=DEFAULT_SRV;
 const saveAC=()=>{try{localStorage.setItem(AK,JSON.stringify(AC))}catch(e){}};
 let syncBusy=false,acT=null,syncMsg='';
-const srvUrl=()=>String(AC.srv||'').trim().replace(/\/+$/,'');
+const srvUrl=()=>String(DEFAULT_SRV||AC.srv||'').trim().replace(/\/+$/,'');
 const localTs=()=>{try{return +localStorage.getItem(KEY+'_t')||0}catch(e){return 0}};
 async function api(path,opt){
  const ac=new AbortController(),to=setTimeout(()=>ac.abort(),20000);
@@ -557,15 +557,13 @@ function sets(){
 function acct(){
  const A=!!window.TajmiAndroid,u=AC.user;
  const tg=(k,t,s)=>`<div class="tg"><div><b>${t}</b><span class="mute">${s}</span></div><button class="sw2${S[k]!==false?' on':''}" data-a="tog" data-v="${k}" aria-label="${t}"></button></div>`;
- const srv=`<label style="margin-top:0">عنوان السيرفر</label><input data-srv value="${esc(AC.srv)}" placeholder="https://اسم.ts.net" dir="ltr" autocapitalize="off" autocomplete="off">`;
- const login=AC.token&&u?`<div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
+  const login=AC.token&&u?`<div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
    ${u.picture?`<img src="${esc(u.picture)}" referrerpolicy="no-referrer" alt="" style="width:56px;height:56px;border-radius:50%;object-fit:cover;flex:none">`:''}
    <div style="min-width:0"><b style="font-size:17px">${esc(u.name)}</b><span class="mute" dir="ltr" style="display:block;overflow:hidden;text-overflow:ellipsis">${esc(u.email)}</span></div></div>
    <span class="mute" style="display:block;margin-bottom:12px">${esc(syncMsg||'مسجّل دخول')}</span>
    <div class="row"><button class="btn" style="flex:1" data-a="syncnow">زامن هلأ</button><button class="btn g" style="flex:1" data-a="signout">تسجيل الخروج</button></div>
-   <div style="margin-top:16px">${srv}</div>`
+`
   :`<span class="mute">سجّل دخول بحساب جوجل عشان بياناتك تنحفظ على السيرفر وتتزامن بين أجهزتك.</span>
-   <div style="margin-top:14px">${srv}</div>
    ${A?`<button class="btn w" style="margin-top:12px" data-a="signin">تسجيل الدخول بجوجل</button>`
       :`<button class="btn g w" style="margin-top:12px;opacity:.5" disabled>متوفر بتطبيق الأندرويد حالياً</button>`}`;
  return `<div class="top"><div class="logo">الحساب</div></div>${pbar()}
