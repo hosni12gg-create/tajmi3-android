@@ -50,6 +50,7 @@ class MainActivity : Activity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        live = this
 
         window.setDecorFitsSystemWindows(false)
 
@@ -176,6 +177,19 @@ class MainActivity : Activity() {
         if (requestCode == REQ_NOTIF) LiveNotifier.showLast(applicationContext)
     }
 
+    /** Called when the watch sent a new amount while the app is open. */
+    fun kick() = js("window.pullWatch&&window.pullWatch()")
+
+    companion object {
+        @Volatile
+        var live: MainActivity? = null
+    }
+
+    override fun onDestroy() {
+        if (live === this) live = null
+        super.onDestroy()
+    }
+
     private fun js(code: String) = runOnUiThread { web.evaluateJavascript(code, null) }
 
     private fun googleSignIn(webClientId: String) {
@@ -222,9 +236,12 @@ class MainActivity : Activity() {
         }
 
         @JavascriptInterface
-        fun watch(saved: Double, target: Double, cur: String, name: String) {
-            WatchSync.send(applicationContext, saved, target, cur, name)
+        fun watch(saved: Double, target: Double, cur: String, name: String, quick: String) {
+            WatchSync.send(applicationContext, saved, target, cur, name, quick)
         }
+
+        @JavascriptInterface
+        fun pending(): String = PendingAdds.take(applicationContext)
 
         @JavascriptInterface
         fun signIn(webClientId: String) {

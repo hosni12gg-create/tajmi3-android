@@ -80,6 +80,7 @@ class RingView(ctx: Context) : View(ctx) {
             rows += if (pct >= 100) Row("وصلت للهدف", side * 0.07f, green, true)
             else Row("المتبقي ${fmt(remaining)} ${d.cur}", side * 0.07f, white, true)
             rows += Row("${fmt(d.saved)} / ${fmt(d.target)} ${d.cur}", side * 0.055f, muted, false)
+            rows += Row("اضغط لإضافة مبلغ", side * 0.045f, amber, false)
         }
 
         // 1) measure every row at its wanted size, 2) stack them centred, 3) shrink each to the chord.

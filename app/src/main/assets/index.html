@@ -372,7 +372,7 @@ const idbGet=()=>getdb().then(db=>new Promise((res,rej)=>{const q=db.transaction
 function save(){const d=dump(),ts=Date.now();let ok=false;
  try{localStorage.setItem(KEY,d);localStorage.setItem(KEY+'_t',String(ts));ok=true}catch(e){try{localStorage.removeItem(KEY);localStorage.removeItem(KEY+'_t')}catch(x){}}
  idbPut({ts,d}).catch(()=>{if(!ok)toast('ما قدرت أحفظ، المساحة ممتلية')});push();schedSync()}
-function push(){if(!S.pages.length)return;try{if(window.TajmiAndroid){try{TajmiAndroid.watch(saved(),+S.p.price||0,String(S.cur),String(S.p.name))}catch(e){}if(S.notif===false){TajmiAndroid.notif(false);return}TajmiAndroid.notif(true);TajmiAndroid.update(saved(),+S.p.price||0,String(S.cur),String(S.p.name))}}catch(e){}}
+function push(){if(!S.pages.length)return;try{if(window.TajmiAndroid){try{TajmiAndroid.watch(saved(),+S.p.price||0,String(S.cur),String(S.p.name),S.quick.join(','))}catch(e){}if(S.notif===false){TajmiAndroid.notif(false);return}TajmiAndroid.notif(true);TajmiAndroid.update(saved(),+S.p.price||0,String(S.cur),String(S.p.name))}}catch(e){}}
 
 /* ---------- icons ---------- */
 const IC={
@@ -832,11 +832,20 @@ function tx(a,n){
  toast((a>0?'انضاف ':'انسحب ')+fmt(Math.abs(a))+' '+S.cur,rem);
 }
 
+/* amounts added from the watch arrive through the phone's queue */
+window.pullWatch=()=>{
+ try{
+  if(!window.TajmiAndroid||!S.pages.length)return;
+  JSON.parse(TajmiAndroid.pending()||'[]').forEach(x=>{x=+x;if(x>0)tx(x,'من الساعة')});
+ }catch(e){}
+};
+setTimeout(()=>window.pullWatch(),900);
+
 /* ---------- events ---------- */
 document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b&&A[b.dataset.a])A[b.dataset.a](b.dataset,e)});
 document.addEventListener('pointerdown',ripple);
 document.addEventListener('change',e=>{const t=e.target;if(t&&t.hasAttribute&&t.hasAttribute('data-srv')){AC.srv=t.value.trim();saveAC();toast('انحفظ العنوان')}});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)acSync(false)});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){window.pullWatch();acSync(false)}});
 setTimeout(()=>acSync(false),1200);
 document.addEventListener('input',e=>{
  if(e.target.id==='amt')amt=e.target.value;

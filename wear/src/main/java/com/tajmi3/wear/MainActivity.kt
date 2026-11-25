@@ -22,6 +22,7 @@ class MainActivity : Activity() {
         super.onCreate(b)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         ring = RingView(this)
+        ring.setOnClickListener { startActivity(Intent(this, AmountActivity::class.java)) }
         setContentView(ring)
     }
 
