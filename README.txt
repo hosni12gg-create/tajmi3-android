@@ -1,22 +1,20 @@
-tajmi3 للجلاكسي (Live Update بالـ Now Bar)
+tajmi3 for Galaxy (Live Update via Now Bar)
 
-بدون Android Studio. GitHub بيبني الـ APK عنك:
+No Android Studio required — GitHub will build the APK for you automatically:
 
-1) اعمل حساب مجاني على github.com، وبعدين New repository (سمّيه tajmi3) واختار Private.
-2) فك ضغط الملف. بصفحة المستودع: Add file ← Upload files، واسحب جواتها كل المحتويات
-   (مجلد app، وملفات gradle، و settings.gradle.kts ...). اضغط Commit.
-   ملاحظة: المجلد المخفي .github ممكن ما ينسحب من الماك، لهيك الخطوة الجاية.
-3) Add file ← Create new file. بخانة الاسم اكتب بالضبط:
-       .github/workflows/build.yml
-   والصق جواته كل محتوى الملف workflow-build.yml، وبعدين Commit.
-4) روح على تبويب Actions. رح تشوف "Build APK" شغّال، وبياخد حوالي 5 دقايق.
-5) لما يخلص (علامة خضرا)، افتحه، ونزّل tajmi3-apk من تحت (Artifacts). فك الضغط، جواته الـ APK.
-6) انقله للجلاكسي وثبّته (بيطلب تسمح بالتثبيت من مصدر غير معروف).
+1. Create a free account at github.com, then click "New repository", name it "tajmi3", and set it to Private.
+2. Unzip the project folder. In your repository, go to: Add file -> Upload files. Drag all the extracted contents inside (the app folder, gradle files, settings.gradle.kts, etc.) and click Commit.
+   *Note: On macOS, the hidden .github folder may not upload via drag-and-drop. Follow the next step to add it manually.*
+3. Go to: Add file -> Create new file. Enter this exact file path as the name:
+   .github/workflows/build.yml
+   Paste the entire contents of workflow-build.yml inside, then click Commit.
+4. Open the "Actions" tab. You will see the "Build APK" workflow running (this takes about 5 minutes).
+5. Once it finishes with a green checkmark, click on the run and download "tajmi3-apk" from the Artifacts section at the bottom. Unzip it to find your APK.
+6. Transfer the APK to your Galaxy phone and install it (allow "Install from unknown sources" if prompted).
 
-لو البناء فشل (علامة حمرا): افتح الخطوة الحمرا، انسخ نص الخطأ وابعتهولي.
+If the build fails (red X): Click the failed step, copy the error log, and send it to me.
 
-على الجوال:
-- اسمح بالإشعارات أول ما يسألك.
-- الـ Now Bar بيشتغل على أندرويد 16 / One UI 8. لو ما ظهر: إعدادات ← الإشعارات ←
-  إعدادات متقدمة ← الإشعارات المباشرة (Live notifications) ← فعّلها لـ tajmi3.
-- الإشعار بتحدّث لما تسجل أو تحذف مبلغ من التطبيق.
+Phone Setup:
+- Grant notification permissions when the app first launches.
+- Now Bar requires Android 16 / One UI 8. If it doesn't appear automatically, go to: Settings -> Notifications -> Advanced settings -> Live notifications -> toggle on for tajmi3.
+- The live notification updates automatically whenever you add or delete an entry in the app.
