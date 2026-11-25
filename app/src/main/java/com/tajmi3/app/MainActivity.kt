@@ -180,11 +180,6 @@ class MainActivity : Activity() {
     /** Called when the watch sent a new amount while the app is open. */
     fun kick() = js("window.pullWatch&&window.pullWatch()")
 
-    companion object {
-        @Volatile
-        var live: MainActivity? = null
-    }
-
     override fun onDestroy() {
         if (live === this) live = null
         super.onDestroy()
@@ -299,5 +294,8 @@ class MainActivity : Activity() {
     companion object {
         private const val REQ_FILE = 11
         private const val REQ_NOTIF = 12
+
+        @Volatile
+        var live: MainActivity? = null
     }
 }
