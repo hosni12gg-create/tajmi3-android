@@ -249,6 +249,13 @@ nav button.on svg{transform:translateY(-1px) scale(1.12)}
 #cf{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:80}
 .noanim *,.noanim *::before,.noanim *::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important;transition-delay:0s!important}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
+
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:44px;padding:0 16px;margin-top:12px;
+ background:#131314;color:#e3e3e3;border:1px solid #8e918f;border-radius:22px;font:500 14px/20px Roboto,system-ui,sans-serif;
+ cursor:pointer;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;transition:background .2s,box-shadow .2s}
+.gbtn:active{background:#2a2a2c}
+.gbtn svg{width:20px;height:20px;flex:none;display:block}
+.gbtn:disabled{opacity:.45;cursor:default}
 </style>
 </head>
 <body>
@@ -554,6 +561,8 @@ function sets(){
  <div class="card"><h2>نسخة احتياطية</h2><div class="row"><button class="btn g" style="flex:1" data-a="exp">${svg('copy')}نسخ البيانات</button><button class="btn g" style="flex:1" data-a="imp">${svg('doc')}استرجاع</button></div></div>
  <button class="btn d w" data-a="reset">${svg('trash')}تصفير رصيد وسجل هذه الصفحة</button>`;
 }
+const G_ICON='<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" xmlns:xlink="http://www.w3.org/1999/xlink" style="display:block"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></svg>';
+const gbtn=on=>`<button class="gbtn"${on?' data-a="signin"':' disabled'} aria-label="تسجيل الدخول باستخدام Google">${G_ICON}<span>تسجيل الدخول باستخدام Google</span></button>`;
 function acct(){
  const A=!!window.TajmiAndroid,u=AC.user;
  const tg=(k,t,s)=>`<div class="tg"><div><b>${t}</b><span class="mute">${s}</span></div><button class="sw2${S[k]!==false?' on':''}" data-a="tog" data-v="${k}" aria-label="${t}"></button></div>`;
@@ -564,8 +573,7 @@ function acct(){
    <div class="row"><button class="btn" style="flex:1" data-a="syncnow">زامن هلأ</button><button class="btn g" style="flex:1" data-a="signout">تسجيل الخروج</button></div>
 `
   :`<span class="mute">سجّل دخول بحساب جوجل عشان بياناتك تنحفظ على السيرفر وتتزامن بين أجهزتك.</span>
-   ${A?`<button class="btn w" style="margin-top:12px" data-a="signin">تسجيل الدخول بجوجل</button>`
-      :`<button class="btn g w" style="margin-top:12px;opacity:.5" disabled>متوفر بتطبيق الأندرويد حالياً</button>`}`;
+   ${gbtn(A)}${A?'':'<span class="mute" style="display:block;margin-top:8px;text-align:center">متوفر بتطبيق الأندرويد حالياً</span>'}`;
  return `<div class="top"><div class="logo">الحساب</div></div>${pbar()}
  <div class="card"><h2>${AC.token&&u?'حسابك':'تسجيل الدخول'}</h2>${login}</div>
  <div class="card"><h2>الإشعارات</h2>
